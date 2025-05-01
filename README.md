@@ -1,5 +1,12 @@
 [comment]: <> (# MASt3R-SLAM: Real-Time Dense SLAM with 3D Reconstruction Priors)
 
+We used an environment of RTX 3090 for our build, so if you have a similar environment you need to build lietorch from scratch.
+
+```
+cd lietorch
+python setup.py install
+```
+
 <p align="center">
   <h1 align="center">MASt3R-SLAM: Real-Time Dense SLAM with 3D Reconstruction Priors</h1>
   <p align="center">

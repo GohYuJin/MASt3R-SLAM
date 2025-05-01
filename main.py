@@ -23,6 +23,7 @@ from mast3r_slam.multiprocess_utils import new_queue, try_get_msg
 from mast3r_slam.tracker import FrameTracker
 from mast3r_slam.visualization import WindowMsg, run_visualization
 import torch.multiprocessing as mp
+from mast3r_slam.lietorch_utils import as_SE3
 
 
 def relocalization(frame, keyframes, factor_graph, retrieval_database):
@@ -146,7 +147,7 @@ if __name__ == "__main__":
     mp.set_start_method("spawn")
     torch.backends.cuda.matmul.allow_tf32 = True
     torch.set_grad_enabled(False)
-    device = "cuda:0"
+    device = "cuda"
     save_frames = False
     datetime_now = str(datetime.datetime.now()).replace(" ", "_")
 
@@ -183,7 +184,7 @@ if __name__ == "__main__":
             intrinsics["calibration"],
         )
 
-    keyframes = SharedKeyframes(manager, h, w)
+    keyframes = SharedKeyframes(manager, h, w, buffer=1024)
     states = SharedStates(manager, h, w)
 
     if not args.no_viz:
@@ -303,6 +304,13 @@ if __name__ == "__main__":
                     if len(states.global_optimizer_tasks) == 0:
                         break
                 time.sleep(0.01)
+
+        with open(save_dir / f"{seq_name}_.txt", "a") as f:
+            T_WC = as_SE3(frame.T_WC)
+            t = dataset.timestamps[frame.frame_id]
+            x, y, z, qx, qy, qz, qw = T_WC.data.numpy().reshape(-1)
+            f.write(f"{t} {x} {y} {z} {qx} {qy} {qz} {qw}\n")
+
         # log time
         if i % 30 == 0:
             FPS = i / (time.time() - fps_timer)
